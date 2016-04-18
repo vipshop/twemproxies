@@ -32,9 +32,15 @@ A quick checklist:
 + Use CFLAGS="-O3 -fno-strict-aliasing" ./configure && make
 + `autoreconf -fvi && ./configure` needs `automake` and `libtool` to be installed
 
+## Note
+
+Try the follow command to get the twemproxys status:
+	
+    printf "status\r\n" | nc manage_ip manage_port
+
 ## Features
 
-+ Multithread
++ Multithread.
 + Fast.
 + Lightweight.
 + Maintains persistent server connections.
@@ -47,7 +53,7 @@ A quick checklist:
 + Easy configuration of server pools through a YAML file.
 + Supports multiple hashing modes including consistent hashing and distribution.
 + Can be configured to disable nodes on failures.
-+ Observability via stats exposed on the stats manage port.
++ Observability via stats exposed on the manage port.
 + Works with Linux, *BSD, OS X and SmartOS (Solaris)
 
 ## Help
@@ -66,9 +72,9 @@ A quick checklist:
       -v, --verbose=N        : set logging level (default: 5, min: 0, max: 11)
       -o, --output=S         : set logging file (default: stderr)
       -c, --conf-file=S      : set configuration file (default: conf/nutcrackers.yml)
-      -s, --stats-port=N     : set stats manage port (default: 22222)
-      -a, --stats-addr=S     : set stats manage ip (default: 0.0.0.0)
-      -i, --stats-interval=N : set stats aggregation interval in msec (default: 30000 msec)
+      -s, --port=N           : set manage port (default: 22222)
+      -a, --addr=S           : set manage ip (default: 0.0.0.0)
+      -i, --interval=N       : set interval in msec (default: 30000 msec)
       -p, --pid-file=S       : set pid file (default: off)
       -m, --mbuf-size=N      : set size of mbuf chunk in bytes (default: 16384 bytes)
 	  -T, --thread_num=N     : set the worker threads number (default: 8)
