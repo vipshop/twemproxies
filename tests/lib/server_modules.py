@@ -6,6 +6,7 @@
 
 import os
 import sys
+import socket
 
 from utils import *
 import conf
@@ -282,8 +283,11 @@ $cluster_name:
 
     def _info_dict(self):
         try:
-            c = telnetlib.Telnet(self.args['host'], self.args['status_port'])
-            ret = c.read_all()
+            sock=socket.socket()
+            sock.connect((self.args['host'], self.args['status_port']))
+            sock.send('status\r\n')
+            ret=sock.recv(10000)
+            sock.close()
             return json_decode(ret)
         except Exception, e:
             logging.debug('can not get _info_dict of nutcracker, \

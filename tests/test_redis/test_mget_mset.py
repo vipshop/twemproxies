@@ -86,7 +86,7 @@ def test_mget_special_key(cnt=5):
     kv = {}
     for i in range(cnt):
         k = 'kkk-%s' % i
-        k = k + 'x'*(512-48-1-len(k))
+        k = k + 'x'*(512-56-1-len(k))
         kv[k] = 'vvv'
 
     test_mget_mset(kv)
@@ -96,7 +96,7 @@ def test_mget_special_key_2(cnt=5):
     kv = {}
     for i in range(cnt):
         k = 'kkk-%s' % i
-        k = k + 'x'*(512-48-2-len(k))
+        k = k + 'x'*(512-56-2-len(k))
         kv[k] = 'vvv'*9
 
     test_mget_mset(kv)
