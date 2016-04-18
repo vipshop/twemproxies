@@ -530,9 +530,11 @@ rstatus_t
 msg_append_full(struct msg *msg, uint8_t *pos, size_t n)
 {
     struct mbuf *mbuf;
+    uint8_t *start;
     size_t left, len;
     struct mbuf_base *mbufb = msg->mb->mbufb;
 
+    start = pos;
     left = n;
 
     while (left > 0) {
@@ -548,7 +550,8 @@ msg_append_full(struct msg *msg, uint8_t *pos, size_t n)
         }
 
         len = MIN(mbuf_size(mbuf), left);
-        mbuf_copy(mbuf, pos, len);
+        mbuf_copy(mbuf, start, len);
+        start += len;
         msg->mlen += (uint32_t)len;
         left -= len;
     }

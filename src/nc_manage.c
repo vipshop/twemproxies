@@ -454,34 +454,34 @@ manage_listen(struct context *ctx, struct conn *p)
 
     status = nc_set_reuseaddr(p->sd);
     if (status < 0) {
-        log_error("set reuseaddr on m %d failed: %s", p->sd, strerror(errno));
+        log_error("set reuseaddr on m %d failed for management: %s", p->sd, strerror(errno));
         return NC_ERROR;
     }
 
     status = bind(p->sd, p->addr, p->addrlen);
     if (status < 0) {
-        log_error("bind on p %d to addr '%.*s' failed: %s", p->sd,
+        log_error("bind on p %d to addr '%.*s' failed for management: %s", p->sd,
                   manager->addrstr.len, manager->addrstr.data, strerror(errno));
         return NC_ERROR;
     }
 
     status = listen(p->sd, 128);
     if (status < 0) {
-        log_error("listen on p %d on addr '%.*s' failed: %s", p->sd,
+        log_error("listen on p %d on addr '%.*s' failed for management: %s", p->sd,
                   manager->addrstr.len, manager->addrstr.data, strerror(errno));
         return NC_ERROR;
     }
 
     status = nc_set_nonblocking(p->sd);
     if (status < 0) {
-        log_error("set nonblock on p %d on addr '%.*s' failed: %s", p->sd,
+        log_error("set nonblock on p %d on addr '%.*s' failed for management: %s", p->sd,
                   manager->addrstr.len, manager->addrstr.data, strerror(errno));
         return NC_ERROR;
     }
 
     status = event_add_conn(ctx->evb, p);
     if (status < 0) {
-        log_error("event add conn p %d on addr '%.*s' failed: %s",
+        log_error("event add conn p %d on addr '%.*s' failed for management: %s",
                   p->sd, manager->addrstr.len, manager->addrstr.data,
                   strerror(errno));
         return NC_ERROR;
@@ -489,7 +489,7 @@ manage_listen(struct context *ctx, struct conn *p)
 
     status = event_del_out(ctx->evb, p);
     if (status < 0) {
-        log_error("event del out p %d on addr '%.*s' failed: %s",
+        log_error("event del out p %d on addr '%.*s' failed for management: %s",
                   p->sd, manager->addrstr.len, manager->addrstr.data,
                   strerror(errno));
         return NC_ERROR;
