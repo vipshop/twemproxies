@@ -55,6 +55,11 @@
 #define CONF_DEFAULT_SERVER_CONNECTIONS      1
 #define CONF_DEFAULT_KETAMA_PORT             11211
 
+#define CONF_DEFAULT_TCPKEEPALIVE            0
+#define CONF_DEFAULT_TCPKEEPIDLE             -1
+#define CONF_DEFAULT_TCPKEEPINTVL            -1
+#define CONF_DEFAULT_TCPKEEPCNT              -1
+
 struct conf_listen {
     struct string   pname;   /* listen: as "hostname:port" */
     struct string   name;    /* hostname:port */
@@ -93,6 +98,11 @@ struct conf_pool {
     int                server_failure_limit;  /* server_failure_limit: */
     struct array       server;                /* servers: conf_server[] */
     unsigned           valid:1;               /* valid? */
+
+    int                tcpkeepalive;          /* tcpkeepalive: */
+    int                tcpkeepidle;           /* tcpkeepidle: */
+    int                tcpkeepintvl;          /* tcpkeepintvl: */
+    int                tcpkeepcnt;            /* tcpkeepcnt: */
 };
 
 struct conf {

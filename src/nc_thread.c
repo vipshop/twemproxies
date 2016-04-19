@@ -243,8 +243,8 @@ client_accept(struct context *ctx, struct conn *notice)
         sui_free(su);
         c = conn_get(sp, true, sp->redis ? NC_SOURCE_TYPE_REDIS : NC_SOURCE_TYPE_MC, ctx->cb);
         if (c == NULL) {
-            log_error("get conn for c %d from pool %s failed: %s", 
-                sd, sp->name, strerror(errno));
+            log_error("get conn for c %d from pool %.*s failed: %s", 
+                sd, sp->name.len, sp->name.data, strerror(errno));
             status = close(sd);
             if (status < 0) {
                 log_error("close c %d failed, ignored: %s", sd, strerror(errno));
@@ -257,30 +257,39 @@ client_accept(struct context *ctx, struct conn *notice)
     
         status = nc_set_nonblocking(c->sd);
         if (status < 0) {
-            log_error("set nonblock on c %d from pool %s failed: %s", 
-                c->sd, sp->name, strerror(errno));
+            log_error("set nonblock on c %d from pool %.*s failed: %s", 
+                c->sd, sp->name.len, sp->name.data, strerror(errno));
             c->close(ctx, c);
             return status;
         }
+
+        if (sp->tcpkeepalive) {
+			status = nc_set_tcpkeepalive(c->sd, sp->tcpkeepidle, 
+				sp->tcpkeepintvl, sp->tcpkeepcnt);
+			if (status != NC_OK) {
+				log_warn("set tcpkeepalive on c %d from pool %.*s failed, ignored: %s",
+				    c->sd, sp->name.len, sp->name.data, strerror(errno));
+			}
+		}
     
         if (sp->info.family == AF_INET || sp->info.family == AF_INET6) {
             status = nc_set_tcpnodelay(c->sd);
             if (status < 0) {
-                log_warn("set tcpnodelay on c %d from pool %s failed, ignored: %s",
-                         c->sd, sp->name, strerror(errno));
+                log_warn("set tcpnodelay on c %d from pool %.*s failed, ignored: %s",
+                    c->sd, sp->name.len, sp->name.data, strerror(errno));
             }
         }
     
         status = event_add_conn(ctx->evb, c);
         if (status < 0) {
-            log_error("event add conn from pool %s failed: %s", 
-                sp->name, strerror(errno));
+            log_error("event add conn from pool %.*s failed: %s", 
+                sp->name.len, sp->name.data, strerror(errno));
             c->close(ctx, c);
             return status;
         }
     
-        log_debug(LOG_DEBUG, "accepted c %d on pool %s from '%s'", 
-            c->sd, sp->name.data, nc_unresolve_peer_desc(c->sd));
+        log_debug(LOG_DEBUG, "accepted c %d on pool %.*s from '%s'", 
+            c->sd, sp->name.len, sp->name.data, nc_unresolve_peer_desc(c->sd));
         break;
     default:
         log_error("read error char '%c' from thread(id:%d) socketpairs[1] %d", 

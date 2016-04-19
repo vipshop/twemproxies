@@ -515,11 +515,12 @@ manage_init(struct context *ctx, char *addr, uint16_t port)
 
     manager->nc_conn_q = 0;
     TAILQ_INIT(&manager->c_conn_q);
+    string_init(&manager->addrstr);
 
     ctx->manager = manager;
     manager->ctx = ctx;
 
-    string_set_raw(&manager->addrstr,addr);
+    string_copy(&manager->addrstr, (uint8_t *)addr, (uint32_t)strlen(addr));
     manager->port = port;
 
     memset(&manager->info, 0, sizeof(manager->info));
@@ -550,10 +551,19 @@ manage_deinit(struct context *ctx)
     struct manage *manager = ctx->manager;
     struct conn *p;
 
+    if (manager == NULL) {
+        return;
+    }
+
     p = manager->p_conn;
     if (p != NULL) {
         p->close(ctx, p);
     }
+
+    string_deinit(&manager->addrstr);
+
+    nc_free(manager);
+    ctx->manager = NULL;
 }
 
 void

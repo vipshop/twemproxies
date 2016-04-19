@@ -335,7 +335,6 @@ proxy_accept(struct context *ctx, struct conn *p)
         return NC_OK;
     }
 
-
     if (p->source_type == NC_SOURCE_TYPE_PROXY) {
         c = conn_get(p->owner, true, NC_SOURCE_TYPE_PROXY, ctx->cb);
         if (c == NULL) {
@@ -356,6 +355,8 @@ proxy_accept(struct context *ctx, struct conn *p)
             c->close(ctx, c);
             return status;
         }
+
+        nc_set_tcpkeepalive(c->sd, 0, 0, 0);
 
         if (p->family == AF_INET || p->family == AF_INET6) {
             status = nc_set_tcpnodelay(c->sd);

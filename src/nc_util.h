@@ -88,6 +88,7 @@ int nc_set_rcvbuf(int sd, int size);
 int nc_get_soerror(int sd);
 int nc_get_sndbuf(int sd);
 int nc_get_rcvbuf(int sd);
+int nc_set_tcpkeepalive(int sd, int keepidle, int keepinterval, int keepcount);
 
 int _nc_atoi(uint8_t *line, size_t n);
 bool nc_valid_port(int n);

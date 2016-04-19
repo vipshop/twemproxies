@@ -106,6 +106,19 @@ static struct command conf_commands[] = {
       conf_add_server,
       offsetof(struct conf_pool, server) },
 
+    { string("tcpkeepalive"),
+      conf_set_bool,
+      offsetof(struct conf_pool, tcpkeepalive) },
+    { string("tcpkeepidle"),
+      conf_set_num,
+      offsetof(struct conf_pool, tcpkeepidle) },
+    { string("tcpkeepintvl"),
+      conf_set_num,
+      offsetof(struct conf_pool, tcpkeepintvl) },
+    { string("tcpkeepcnt"),
+      conf_set_num,
+      offsetof(struct conf_pool, tcpkeepcnt) },
+
     null_command
 };
 
@@ -205,6 +218,11 @@ conf_pool_init(struct conf_pool *cp, struct string *name)
 
     cp->valid = 0;
 
+    cp->tcpkeepalive = CONF_UNSET_NUM;
+    cp->tcpkeepidle = CONF_UNSET_NUM;
+    cp->tcpkeepintvl = CONF_UNSET_NUM;
+    cp->tcpkeepcnt = CONF_UNSET_NUM;
+
     status = string_duplicate(&cp->name, name);
     if (status != NC_OK) {
         return status;
@@ -295,6 +313,11 @@ conf_pool_each_transform(void *elem, void *data)
     sp->server_failure_limit = (uint32_t)cp->server_failure_limit;
     sp->auto_eject_hosts = cp->auto_eject_hosts ? 1 : 0;
     sp->preconnect = cp->preconnect ? 1 : 0;
+
+    sp->tcpkeepalive = cp->tcpkeepalive ? 1 : 0;
+    sp->tcpkeepidle = cp->tcpkeepidle;
+    sp->tcpkeepintvl = cp->tcpkeepintvl;
+    sp->tcpkeepcnt = cp->tcpkeepcnt;
 
     status = server_init(&sp->server, &cp->server, sp);
     if (status != NC_OK) {
@@ -1267,6 +1290,19 @@ conf_validate_pool(struct conf *cf, struct conf_pool *cp)
 
     cp->valid = 1;
 
+    if (cp->tcpkeepalive == CONF_UNSET_NUM) {
+        cp->tcpkeepalive = CONF_DEFAULT_TCPKEEPALIVE;
+    }
+    if (cp->tcpkeepidle == CONF_UNSET_NUM) {
+        cp->tcpkeepidle = CONF_DEFAULT_TCPKEEPIDLE;
+    }
+    if (cp->tcpkeepintvl == CONF_UNSET_NUM) {
+        cp->tcpkeepintvl = CONF_DEFAULT_TCPKEEPINTVL;
+    }
+    if (cp->tcpkeepcnt == CONF_UNSET_NUM) {
+        cp->tcpkeepcnt = CONF_DEFAULT_TCPKEEPCNT;
+    }
+
     return NC_OK;
 }
 
@@ -1385,6 +1421,10 @@ error:
 void
 conf_destroy(struct conf *cf)
 {
+    if (cf == NULL) {
+        return;
+    }
+    
     while (array_n(&cf->arg) != 0) {
         conf_pop_scalar(cf);
     }

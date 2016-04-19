@@ -120,6 +120,10 @@ struct server_pool {
     unsigned           auto_eject_hosts:1;   /* auto_eject_hosts? */
     unsigned           preconnect:1;         /* preconnect? */
     unsigned           redis:1;              /* redis? */
+    unsigned           tcpkeepalive:1;       /* tcp keepalive? */
+    int                tcpkeepidle;			 /* tcpkeep idle */
+    int                tcpkeepintvl;	     /* tcpkeep interval */
+    int                tcpkeepcnt;			 /* tcpkeep count */
 };
 
 void server_ref(struct conn *conn, void *owner);

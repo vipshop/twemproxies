@@ -465,21 +465,23 @@ nc_get_options(int argc, char **argv, struct instance *nci)
  * returns false
  */
 static bool
-nc_test_conf(struct instance *nci)
+nc_test_conf(struct instance *nci, bool test)
 {
     struct conf *cf;
 
     cf = conf_create(nci->conf_filename);
     if (cf == NULL) {
-        log_stderr("nutcrackers: configuration file '%s' syntax is invalid",
-                   nci->conf_filename);
+        if (test)
+            log_stderr("nutcrackers: configuration file '%s' syntax is invalid",
+                nci->conf_filename);
         return false;
     }
 
     conf_destroy(cf);
 
-    log_stderr("nutcrackers: configuration file '%s' syntax is ok",
-               nci->conf_filename);
+    if (test)
+        log_stderr("nutcrackers: configuration file '%s' syntax is ok",
+            nci->conf_filename);
     return true;
 }
 
@@ -491,6 +493,11 @@ nc_pre_run(struct instance *nci)
     status = log_init(nci->log_level, nci->log_filename);
     if (status != NC_OK) {
         return status;
+    }
+
+    if (!nc_test_conf(nci, false)) {
+        log_error("conf file %s is error", nci->conf_filename);
+        return NC_ERROR;
     }
 
     if (daemonize) {
@@ -556,7 +563,7 @@ nc_run(struct instance *nci)
     if (status != NC_OK) {
         return;
     }
-
+    
     /* init the workers */
     for (i = 0; i < worker_count; i ++) {
         worker = array_push(&workers);
@@ -617,7 +624,7 @@ main(int argc, char **argv)
     }
 
     if (test_conf) {
-        if (!nc_test_conf(&nci)) {
+        if (!nc_test_conf(&nci, true)) {
             exit(1);
         }
         exit(0);

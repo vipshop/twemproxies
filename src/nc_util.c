@@ -181,6 +181,52 @@ nc_get_rcvbuf(int sd)
 }
 
 int
+nc_set_tcpkeepalive(int sd, int keepidle, int keepinterval, int keepcount)
+{
+    rstatus_t status;
+    int tcpkeepalive;
+    socklen_t len;
+
+    tcpkeepalive = 1;
+    len = sizeof(tcpkeepalive);
+
+    status = setsockopt(sd, SOL_SOCKET, SO_KEEPALIVE, &tcpkeepalive, len);
+    if (status < 0) {
+        log_error("setsockopt SO_KEEPALIVE call error(%s)", strerror(errno));
+        return NC_ERROR;
+    }
+    
+    if (keepidle > 0) {
+        len = sizeof(keepidle);
+        status = setsockopt(sd, SOL_TCP, TCP_KEEPIDLE, &keepidle, len);
+        if (status < 0) {
+            log_error("setsockopt TCP_KEEPIDLE call error(%s)", strerror(errno));
+            return NC_ERROR;
+        }
+    }
+
+    if (keepinterval > 0) {
+        len = sizeof(keepinterval);
+        status = setsockopt(sd, SOL_TCP, TCP_KEEPINTVL, &keepinterval, len);
+        if (status < 0) {
+            log_error("setsockopt TCP_KEEPINTVL call error(%s)", strerror(errno));
+            return NC_ERROR;
+        }
+    }
+
+    if (keepcount > 0) {
+        len = sizeof(keepcount);
+        status = setsockopt(sd, SOL_TCP, TCP_KEEPCNT, &keepcount, len);
+        if (status < 0) {
+            log_error("setsockopt TCP_KEEPCNT call error(%s)", strerror(errno));
+            return NC_ERROR;
+        }
+    }
+
+    return NC_OK;
+}
+
+int
 _nc_atoi(uint8_t *line, size_t n)
 {
     int value;
