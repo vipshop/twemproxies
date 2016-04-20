@@ -256,7 +256,7 @@ int get_twem_stats(char * ip, int port, char * pool_name)
     int i;
     int recbytes;
     int sin_size;
-    char buffer[5000]={0};   
+    static char buffer[500000]={0};
     struct sockaddr_in s_add,c_adda;
     cJSON *root = NULL; 
     cJSON *pool = NULL;
@@ -282,13 +282,17 @@ int get_twem_stats(char * ip, int port, char * pool_name)
         goto error;
     }
     
-    if (-1 == (recbytes = read(cfd,buffer,5000))) {
+    if (-1 == (recbytes = read(cfd,buffer,500000))) {
         printf("read data fail: %s\n", strerror(errno));
         goto error;
     }
 
     buffer[recbytes]='\0';
     root = cJSON_Parse(buffer);
+    if (root == NULL) {
+        printf("parse json fail.\n");
+        goto error;
+    }
     pool = cJSON_GetObjectItem(root, pool_name);
 
     if (pool == NULL) {
