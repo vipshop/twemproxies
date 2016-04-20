@@ -34,6 +34,7 @@
 # Core and executable
 core*
 nutcracker
+show_twem_stats
 
 # extracted yaml
 !/contrib/yaml-0.1.4.tar.gz

@@ -460,8 +460,8 @@ manage_listen(struct context *ctx, struct conn *p)
 
     status = bind(p->sd, p->addr, p->addrlen);
     if (status < 0) {
-        log_error("bind on p %d to addr '%.*s' failed for management: %s", p->sd,
-                  manager->addrstr.len, manager->addrstr.data, strerror(errno));
+        log_error("bind on p %d to addr '%.*s:%d' failed for management: %s", p->sd,
+                  manager->addrstr.len, manager->addrstr.data, manager->port, strerror(errno));
         return NC_ERROR;
     }
 
