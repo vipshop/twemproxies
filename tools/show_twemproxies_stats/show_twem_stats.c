@@ -48,6 +48,12 @@ static struct tm *tblock;
 
 static const int content_name_interval = 26;
 
+#define BYTES_RECEIVE_PRE_TIME 512
+static char   buffer[BYTES_RECEIVE_PRE_TIME];
+static char   *content = NULL;
+static size_t content_size = 0;
+static size_t content_len = 0;
+
 int get_twem_used_memory(char * proc)
 {
     int i = 0;
@@ -254,9 +260,9 @@ int get_twem_stats(char * ip, int port, char * pool_name)
 {
     int cfd = -1;
     int i;
-    int recbytes;
+    int trytimes = 0, max_trytimes = 3;
+    ssize_t recbytes;
     int sin_size;
-    static char buffer[500000]={0};
     struct sockaddr_in s_add,c_adda;
     cJSON *root = NULL; 
     cJSON *pool = NULL;
@@ -278,23 +284,55 @@ int get_twem_stats(char * ip, int port, char * pool_name)
     }
     
     if (write(cfd, "status\r\n", 8) != 8) {
-        printf("write data fail\r\n");
+        printf("write data fail\n");
         goto error;
     }
     
-    if (-1 == (recbytes = read(cfd,buffer,500000))) {
-        printf("read data fail: %s\n", strerror(errno));
-        goto error;
-    }
+    content_len = 0;
+tryagain:
+    for (;;) {
+        recbytes = read(cfd,buffer,BYTES_RECEIVE_PRE_TIME);
+        if (recbytes > 0) {
+        if (content == NULL) {
+            content = malloc((recbytes + 1)*sizeof(char));
+            if (content == NULL) {
+                printf("out of memory\n");
+                goto error;
+            }
+            content_size = recbytes + 1;
+        } else if (recbytes > content_size-content_len) {
+            content = realloc(content, (content_size + recbytes + 1)*sizeof(char));
+            if (content == NULL) {
+                printf("out of memory\n");
+                goto error;
+            }
+            content_size += recbytes + 1;
+        }
+        memcpy(content+content_len, buffer, recbytes);
+        content_len += recbytes;
+            if (recbytes < BYTES_RECEIVE_PRE_TIME) {
+                break;
+            }
+        } else if (recbytes == 0) {
+            break;
+        } else {
+            printf("read data fail: %s\n", strerror(errno));
+            goto error;
+        }
 
-    buffer[recbytes]='\0';
-    root = cJSON_Parse(buffer);
+    }
+    
+    content[content_len]='\0';
+    root = cJSON_Parse(content);
     if (root == NULL) {
-        printf("parse json fail.\n");
-        goto error;
+        if (trytimes >= max_trytimes) {
+            printf("receive data timeout\n");
+            goto error;
+        }
+        trytimes ++;
+        goto tryagain;
     }
     pool = cJSON_GetObjectItem(root, pool_name);
-
     if (pool == NULL) {
         printf("pool %s can not find!\n", pool_name);
         goto error;
@@ -528,7 +566,7 @@ int main(int argc, char **argv)
     for (i = 0; i < stats_len; i ++) {
         stats_now[i] = 0;
     }
-    sleep(1);
+    usleep(interval*1000);
     
     idx = 0;
     
