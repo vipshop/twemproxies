@@ -7,6 +7,7 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include "cJSON.h"
 #include "util.h"
 
@@ -48,11 +49,38 @@ static struct tm *tblock;
 
 static const int content_name_interval = 26;
 
-#define BYTES_RECEIVE_PRE_TIME 512
+#define BYTES_RECEIVE_PRE_TIME 8192
 static char   buffer[BYTES_RECEIVE_PRE_TIME];
 static char   *content = NULL;
 static size_t content_size = 0;
 static size_t content_len = 0;
+
+#define READ_TIMEOUT  1000
+
+#define POLL_NONE     0
+#define POLL_READABLE 1
+#define POLL_WRITABLE 2
+/* Wait for milliseconds until the given file descriptor becomes
+ * writable/readable/exception */
+int pollWait(int fd, int mask, long long milliseconds) {
+    struct pollfd pfd;
+    int retmask = 0, retval;
+
+    memset(&pfd, 0, sizeof(pfd));
+    pfd.fd = fd;
+    if (mask & POLL_READABLE) pfd.events |= POLLIN;
+    if (mask & POLL_WRITABLE) pfd.events |= POLLOUT;
+
+    if ((retval = poll(&pfd, 1, milliseconds))== 1) {
+        if (pfd.revents & POLLIN) retmask |= POLL_READABLE;
+        if (pfd.revents & POLLOUT) retmask |= POLL_WRITABLE;
+    if (pfd.revents & POLLERR) retmask |= POLL_WRITABLE;
+        if (pfd.revents & POLLHUP) retmask |= POLL_WRITABLE;
+        return retmask;
+    } else {
+        return retval;
+    }
+}
 
 int get_twem_used_memory(char * proc)
 {
@@ -260,10 +288,10 @@ int get_twem_stats(char * ip, int port, char * pool_name)
 {
     int cfd = -1;
     int i;
-    int trytimes = 0, max_trytimes = 3;
     ssize_t recbytes;
     int sin_size;
     struct sockaddr_in s_add,c_adda;
+    long long now_time, start_time;
     cJSON *root = NULL; 
     cJSON *pool = NULL;
     
@@ -288,9 +316,18 @@ int get_twem_stats(char * ip, int port, char * pool_name)
         goto error;
     }
     
+
     content_len = 0;
-tryagain:
+    start_time = mstime();
+    set_nonblocking(cfd);
     for (;;) {
+        pollWait(cfd, POLL_READABLE, 10);
+        now_time = mstime();
+        if (now_time - start_time > READ_TIMEOUT) {
+            printf("read data timeout\n");
+            goto error;   
+        }
+        
         recbytes = read(cfd,buffer,BYTES_RECEIVE_PRE_TIME);
         if (recbytes > 0) {
             if (content == NULL) {
@@ -310,29 +347,25 @@ tryagain:
             }
             memcpy(content+content_len, buffer, recbytes);
             content_len += recbytes;
-            if (recbytes < BYTES_RECEIVE_PRE_TIME) {
+ 
+            content[content_len]='\0';
+            root = cJSON_Parse(content);
+            if (root == NULL) {
+                continue;
+            } else {
                 break;
             }
         } else if (recbytes == 0) {
             printf("twemproxies close the connection, please see whether the port is correct\n", strerror(errno));
             goto error;
         } else {
-            printf("read data fail: %s\n", strerror(errno));
-            goto error;
+            if (errno != EAGAIN) {
+                printf("read data fail: %s\n", strerror(errno));
+                goto error;
+            }
         }
+    }
 
-    }
-    
-    content[content_len]='\0';
-    root = cJSON_Parse(content);
-    if (root == NULL) {
-        if (trytimes >= max_trytimes) {
-            printf("receive data timeout\n");
-            goto error;
-        }
-        trytimes ++;
-        goto tryagain;
-    }
     pool = cJSON_GetObjectItem(root, pool_name);
     if (pool == NULL) {
         printf("pool %s can not find!\n", pool_name);
@@ -459,51 +492,6 @@ error:
         root = NULL;
     }
     return -1;
-}
-
-int get_mc_get_set(char * ip, int port)
-{
-    int cfd;
-    int recbytes;
-    int sendbytes;
-    int sin_size;
-    char buffer[5000]={0};   
-    struct sockaddr_in s_add,c_adda;
-
-    int i;
-    
-    cfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (-1 == cfd) {
-        printf("socket fail ! \r\n");
-        return -1;
-    }
-    
-    bzero(&s_add,sizeof(struct sockaddr_in));
-    s_add.sin_family=AF_INET;
-    s_add.sin_addr.s_addr= inet_addr(ip);
-    s_add.sin_port=htons(port);
-    
-    if (-1 == connect(cfd,(struct sockaddr *)(&s_add), sizeof(struct sockaddr))) {
-        printf("connect fail !\r\n");
-        return -1;
-    }
-    
-    char *send_str = "stats\r\n";
-    if(-1 == (sendbytes = send(cfd, send_str, strlen(send_str), 0)));
-    {
-        printf("write data fail : %s\r\n", strerror(errno));
-        return -1;
-    }
-
-    if(-1 == (recbytes = read(cfd,buffer,5000)))
-    {
-        printf("read data fail !\r\n");
-        return -1;
-    }
-    printf("read ok\r\nREC:\r\n");
-    buffer[recbytes]='\0';
-    close(cfd);
-    return 0;
 }
 
 void print_stats()

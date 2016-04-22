@@ -1,8 +1,10 @@
 #ifndef _SHOW_UTIL_H_
 #define _SHOW_UTIL_H_
 
-#include<stdlib.h>
-#include<string.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
 int my_atoi(const char* str){
      if(str == NULL)
      {
@@ -136,6 +138,48 @@ void dec2hex(int n,char s[])
 	s[i]='\0';
 	
 	rever(s);
+}
+
+/* Return the UNIX time in microseconds */
+long long ustime(void) {
+    struct timeval tv;
+    long long ust;
+
+    gettimeofday(&tv, NULL);
+    ust = ((long long)tv.tv_sec)*1000000;
+    ust += tv.tv_usec;
+    return ust;
+}
+
+/* Return the UNIX time in milliseconds */
+long long mstime(void) {
+    return ustime()/1000;
+}
+
+int
+set_blocking(int sd)
+{
+    int flags;
+
+    flags = fcntl(sd, F_GETFL, 0);
+    if (flags < 0) {
+        return flags;
+    }
+
+    return fcntl(sd, F_SETFL, flags & ~O_NONBLOCK);
+}
+
+int
+set_nonblocking(int sd)
+{
+    int flags;
+
+    flags = fcntl(sd, F_GETFL, 0);
+    if (flags < 0) {
+        return flags;
+    }
+
+    return fcntl(sd, F_SETFL, flags | O_NONBLOCK);
 }
 
 #endif
