@@ -293,28 +293,29 @@ tryagain:
     for (;;) {
         recbytes = read(cfd,buffer,BYTES_RECEIVE_PRE_TIME);
         if (recbytes > 0) {
-        if (content == NULL) {
-            content = malloc((recbytes + 1)*sizeof(char));
             if (content == NULL) {
-                printf("out of memory\n");
-                goto error;
+                content = malloc((recbytes + 1)*sizeof(char));
+                if (content == NULL) {
+                    printf("out of memory\n");
+                    goto error;
+                }
+                content_size = recbytes + 1;
+            } else if (recbytes > content_size-content_len) {
+                content = realloc(content, (content_size + recbytes + 1)*sizeof(char));
+                if (content == NULL) {
+                    printf("out of memory\n");
+                    goto error;
+                }
+                content_size += recbytes + 1;
             }
-            content_size = recbytes + 1;
-        } else if (recbytes > content_size-content_len) {
-            content = realloc(content, (content_size + recbytes + 1)*sizeof(char));
-            if (content == NULL) {
-                printf("out of memory\n");
-                goto error;
-            }
-            content_size += recbytes + 1;
-        }
-        memcpy(content+content_len, buffer, recbytes);
-        content_len += recbytes;
+            memcpy(content+content_len, buffer, recbytes);
+            content_len += recbytes;
             if (recbytes < BYTES_RECEIVE_PRE_TIME) {
                 break;
             }
         } else if (recbytes == 0) {
-            break;
+            printf("twemproxies close the connection, please see whether the port is correct\n", strerror(errno));
+            goto error;
         } else {
             printf("read data fail: %s\n", strerror(errno));
             goto error;
