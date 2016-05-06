@@ -409,7 +409,7 @@ void *worker_thread_run(void *args)
         return NULL;
     }
 
-    pthread_mutex_init(&worker->ctx->statslock, NULL);
+    thread_stats_lock_init(worker->ctx);
 
     status = setup_worker(worker);
     if (status != NC_OK) {
@@ -424,6 +424,8 @@ void *worker_thread_run(void *args)
             break;
         }
     }
+
+    thread_stats_lock_destroy(worker->ctx);
 
     core_ctx_destroy(worker->ctx);
 

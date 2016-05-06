@@ -58,6 +58,10 @@
 # define NC_HAVE_BACKTRACE 1
 #endif
 
+#ifdef HAVE_SPINLOCK
+# define NC_USE_SPINLOCK 1
+#endif
+
 #define NC_OK        0
 #define NC_ERROR    -1
 #define NC_EAGAIN   -2
@@ -147,8 +151,12 @@ struct context {
     struct conn_base   *cb;
     int                role;        /* master or worker */
     struct array       *workers;    /* if role is master, this is the workers. type: struct thread_data*/
-    pthread_mutex_t     statslock;  /* if role is worker, this lock is for swap stats with master */
-    struct manage       *manager;
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    pthread_spinlock_t statslock;   /* if role is worker, this lock is for swap stats with master */
+#else
+    pthread_mutex_t    statslock;   /* if role is worker, this lock is for swap stats with master */
+#endif
+    struct manage      *manager;
 };
 
 struct instance {

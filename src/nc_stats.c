@@ -27,7 +27,11 @@
 #include <nc_server.h>
 
 /* Lock for global stats */
-static pthread_mutex_t stats_lock = PTHREAD_MUTEX_INITIALIZER;
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+static pthread_spinlock_t stats_lock;
+#else
+static pthread_mutex_t stats_lock;
+#endif
 
 struct stats_desc {
     char *name; /* stats name */
@@ -916,9 +920,9 @@ _stats_pool_incr(struct context *ctx, struct server_pool *pool,
     stm = stats_pool_to_metric(ctx, pool, fidx);
 
     ASSERT(stm->type == STATS_COUNTER || stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter++;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "incr field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -937,9 +941,9 @@ _stats_pool_decr(struct context *ctx, struct server_pool *pool,
     stm = stats_pool_to_metric(ctx, pool, fidx);
 
     ASSERT(stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter--;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "decr field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -958,9 +962,9 @@ _stats_pool_incr_by(struct context *ctx, struct server_pool *pool,
     stm = stats_pool_to_metric(ctx, pool, fidx);
 
     ASSERT(stm->type == STATS_COUNTER || stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter += val;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "incr by field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -979,9 +983,9 @@ _stats_pool_decr_by(struct context *ctx, struct server_pool *pool,
     stm = stats_pool_to_metric(ctx, pool, fidx);
 
     ASSERT(stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter -= val;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "decr by field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -1000,9 +1004,9 @@ _stats_pool_set_ts(struct context *ctx, struct server_pool *pool,
     stm = stats_pool_to_metric(ctx, pool, fidx);
 
     ASSERT(stm->type == STATS_TIMESTAMP);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.timestamp = val;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "set ts field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.timestamp);
@@ -1047,9 +1051,9 @@ _stats_server_incr(struct context *ctx, struct server *server,
     stm = stats_server_to_metric(ctx, server, fidx);
 
     ASSERT(stm->type == STATS_COUNTER || stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter++;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "incr field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -1068,9 +1072,9 @@ _stats_server_decr(struct context *ctx, struct server *server,
     stm = stats_server_to_metric(ctx, server, fidx);
 
     ASSERT(stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter--;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "decr field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -1089,9 +1093,9 @@ _stats_server_incr_by(struct context *ctx, struct server *server,
     stm = stats_server_to_metric(ctx, server, fidx);
 
     ASSERT(stm->type == STATS_COUNTER || stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter += val;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "incr by field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -1110,9 +1114,9 @@ _stats_server_decr_by(struct context *ctx, struct server *server,
     stm = stats_server_to_metric(ctx, server, fidx);
 
     ASSERT(stm->type == STATS_GAUGE);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.counter -= val;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "decr by field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.counter);
@@ -1131,9 +1135,9 @@ _stats_server_set_ts(struct context *ctx, struct server *server,
     stm = stats_server_to_metric(ctx, server, fidx);
 
     ASSERT(stm->type == STATS_TIMESTAMP);
-    pthread_mutex_lock(&ctx->statslock);
+    thread_stats_lock(ctx);
     stm->value.timestamp = val;
-    pthread_mutex_unlock(&ctx->statslock);
+    thread_stats_unlock(ctx);
 
     log_debug(LOG_VVVERB, "set ts field '%.*s' to %"PRId64"", stm->name.len,
               stm->name.data, stm->value.timestamp);
@@ -1144,7 +1148,7 @@ stats_thread_aggregate(struct stats *st, struct thread_data *tdata)
 {
     uint32_t i;
 
-    pthread_mutex_lock(&tdata->ctx->statslock);
+    thread_stats_lock(tdata->ctx);
     for (i = 0; i < array_n(&tdata->ctx->stats->current); i++) {
         struct stats_pool *stp1, *stp2;
         uint32_t j;
@@ -1160,8 +1164,8 @@ stats_thread_aggregate(struct stats *st, struct thread_data *tdata)
             sts2 = array_get(&stp2->server, j);
             stats_aggregate_metric(&sts2->metric, &sts1->metric);
         }
-    }
-    pthread_mutex_unlock(&tdata->ctx->statslock);
+    }    
+    thread_stats_unlock(tdata->ctx);
 }
 
 void
@@ -1181,12 +1185,110 @@ stats_aggregate(struct context *ctx)
     }
 }
 
-void
-STATS_LOCK() {
-    pthread_mutex_lock(&stats_lock);
+int
+STATS_LOCK_INIT(void)
+{
+    int ret;
+    
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    ret = pthread_spin_init(&stats_lock, 0);
+#else
+    ret = pthread_mutex_init(&stats_lock, NULL);
+#endif
+    if (ret != 0) {
+        return NC_ERROR;
+    }
+    
+    return NC_OK;
+}
+
+int
+STATS_LOCK_DESTROY(void)
+{
+    int ret;
+    
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    ret = pthread_spin_destroy(&stats_lock);
+#else
+    ret = pthread_mutex_destroy(&stats_lock);
+#endif
+    if (ret != 0) {
+        return NC_ERROR;
+    }
+    
+    return NC_OK;
 }
 
 void
-STATS_UNLOCK() {
+STATS_LOCK(void)
+{
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    pthread_spin_lock(&stats_lock);
+#else
+    pthread_mutex_lock(&stats_lock);
+#endif
+}
+
+void
+STATS_UNLOCK(void)
+{
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    pthread_spin_unlock(&stats_lock);
+#else
     pthread_mutex_unlock(&stats_lock);
+#endif
+}
+
+int
+thread_stats_lock_init(struct context *ctx)
+{
+    int ret;
+    
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    ret = pthread_spin_init(&ctx->statslock, 0);
+#else
+    ret = pthread_mutex_init(&ctx->statslock, NULL);
+#endif
+    if (ret != 0) {
+        return NC_ERROR;
+    }
+    
+    return NC_OK;
+}
+
+int
+thread_stats_lock_destroy(struct context *ctx)
+{
+    int ret;
+
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    ret = pthread_spin_destroy(&ctx->statslock);
+#else
+    ret = pthread_mutex_destroy(&ctx->statslock);
+#endif
+    if (ret != 0) {
+        return NC_ERROR;
+    }
+    
+    return NC_OK;
+}
+
+void
+thread_stats_lock(struct context *ctx)
+{
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    pthread_spin_lock(&ctx->statslock);
+#else
+    pthread_mutex_lock(&ctx->statslock);
+#endif
+}
+
+void
+thread_stats_unlock(struct context *ctx)
+{
+#if defined NC_USE_SPINLOCK && NC_USE_SPINLOCK == 1
+    pthread_spin_unlock(&ctx->statslock);
+#else
+    pthread_mutex_unlock(&ctx->statslock);
+#endif
 }

@@ -217,7 +217,14 @@ void stats_swap(struct stats *stats);
 void stats_aggregate(struct context *ctx);
 rstatus_t stats_make_rsp(struct stats *st);
 
+int STATS_LOCK_INIT(void);
+int STATS_LOCK_DESTROY(void);
 void STATS_LOCK(void);
 void STATS_UNLOCK(void);
+
+int thread_stats_lock_init(struct context *ctx);
+int thread_stats_lock_destroy(struct context *ctx);
+void thread_stats_lock(struct context *ctx);
+void thread_stats_unlock(struct context *ctx);
 
 #endif

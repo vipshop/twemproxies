@@ -521,6 +521,8 @@ nc_pre_run(struct instance *nci)
         }
     }
 
+    STATS_LOCK_INIT();
+
     nc_print_run(nci);
 
     return NC_OK;
@@ -529,6 +531,8 @@ nc_pre_run(struct instance *nci)
 static void
 nc_post_run(struct instance *nci)
 {
+    STATS_LOCK_DESTROY();
+
     if (nci->pidfile) {
         nc_remove_pidfile(nci);
     }
@@ -617,7 +621,7 @@ main(int argc, char **argv)
         }
 
         if (describe_stats) {
-            //stats_describe();
+            stats_describe();
         }
 
         exit(0);

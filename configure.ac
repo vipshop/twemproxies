@@ -196,6 +196,19 @@ AS_IF([test "x$disable_stats" = xyes],
   [AC_DEFINE([HAVE_STATS], [1], [Define to 1 if stats is not disabled])])
 AC_MSG_RESULT($disable_stats)
 
+AC_MSG_CHECKING([whether to disable spinlock])
+AC_ARG_ENABLE([spinlock],
+  [AS_HELP_STRING(
+    [--disable-spinlock],
+    [disable spinlock])
+  ],
+  [disable_spinlock=yes],
+  [disable_spinlock=no])
+AS_IF([test "x$disable_spinlock" = xyes],
+  [],
+  [AC_DEFINE([HAVE_SPINLOCK], [1], [Define to 1 if spinlock is not disabled])])
+AC_MSG_RESULT($disable_spinlock)
+
 # Untar the yaml-0.1.4 in contrib/ before config.status is rerun
 AC_CONFIG_COMMANDS_PRE([tar xvfz contrib/yaml-0.1.4.tar.gz -C contrib])
 
