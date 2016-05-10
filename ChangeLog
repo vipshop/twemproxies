@@ -1,3 +1,12 @@
+ 2016-5-10  deep  <diguo58@gmail.com>
+    * twemproxies: version 1.1.0 release
+      add show_twemproxies_stats tool
+      support spin lock for stats
+ 
+ 2016-4-20  deep  <diguo58@gmail.com>
+    * twemproxies: version 1.0.0 release
+      multi-threads support
+    
  2015-22-06  Manju Rajashekhar  <manj@cs.stanford.edu>
     * twemproxy: version 0.4.1 release
       redis_auth is only valid for a redis pool
