@@ -573,13 +573,20 @@ nc_run(struct instance *nci)
         worker = array_push(&workers);
         thread_data_init(worker);
         worker->nci = nci;
+
+        status = setup_worker(worker);
+        if (status != NC_OK) {
+            exit(1);
+        }
     }
 
     /* run the worker job */
     for (i = 0; i < worker_count; i ++) {
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
         worker = array_get(&workers, i);
         pthread_create(&worker->thread_id, 
-        	NULL, worker_thread_run, worker);
+        	&attr, worker_thread_run, worker);
     }
 
     status = master_run(nci, &workers);

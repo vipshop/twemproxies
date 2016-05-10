@@ -58,6 +58,8 @@ rstatus_t notice_recv(struct context *ctx, struct conn *conn);
 void notice_ref(struct conn *conn, void *owner);
 void notice_unref(struct conn *conn);
 
+int setup_worker(struct thread_data *worker);
+
 int master_run(struct instance *nci, struct array *workers);
 void *worker_thread_run(void *args);
 

@@ -196,10 +196,17 @@ dispatch_conn_new(int sd, uint32_t pool_id, struct array *workers)
     }
 }
 
-static int
+int
 setup_worker(struct thread_data *worker)
 {
     struct conn *notice;
+
+    worker->ctx = core_ctx_create(worker->nci, NC_CONTEXT_ROLE_WORKER);
+    if (worker->ctx == NULL) {
+        return NC_ERROR;
+    }
+
+    thread_stats_lock_init(worker->ctx);
 
     notice = conn_get_notice(worker);
     if (notice == NULL) {
@@ -403,20 +410,7 @@ void *worker_thread_run(void *args)
 {
     rstatus_t status;
     struct thread_data *worker = args;
-
-    worker->ctx = core_ctx_create(worker->nci, NC_CONTEXT_ROLE_WORKER);
-    if (worker->ctx == NULL) {
-        return NULL;
-    }
-
-    thread_stats_lock_init(worker->ctx);
-
-    status = setup_worker(worker);
-    if (status != NC_OK) {
-        core_ctx_destroy(worker->ctx);
-        return NULL;
-    }
-
+    
     /* run rabbit run */
     for (;;) {
         status = core_loop(worker->ctx);
