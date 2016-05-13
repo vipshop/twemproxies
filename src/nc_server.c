@@ -925,3 +925,42 @@ server_pool_deinit(struct array *server_pool)
 
     log_debug(LOG_DEBUG, "deinit %"PRIu32" pools", npool);
 }
+
+int
+server_pools_idx(struct array *pools, uint8_t *pool_name, uint32_t namelen)
+{
+    uint32_t idx;
+    uint32_t len;
+    uint8_t find = 0;
+    struct server_pool *sp;
+
+    for (idx = 0; idx < array_n(pools); idx ++) {
+		sp = array_get(pools, idx);
+        
+        len = MIN(sp->name.len, namelen);
+        
+		if (memcmp(sp->name.data, pool_name, len) == 0) {
+            find = 1;
+			break;
+		}
+	}
+
+    if (!find) {
+        return -1;
+    }
+
+    return (int)idx;
+}
+
+struct server_pool *
+server_pools_server_pool(struct array *pools, uint8_t *pool_name, uint32_t namelen)
+{
+    int idx;
+
+    idx = server_pools_idx(pools, pool_name, namelen);
+    if (idx < 0) {
+        return NULL;
+    }
+
+    return array_get(pools, (uint32_t)idx);
+}

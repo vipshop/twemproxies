@@ -188,6 +188,7 @@ typedef enum msg_parse_result {
     ACTION( REQ_PROXY_QUIT )                                                                        \
     ACTION( REQ_PROXY_STATUS )                                                                      \
     ACTION( REQ_PROXY_FIND_KEY )                                                                    \
+    ACTION( REQ_PROXY_FIND_KEYS )                                                                   \
     ACTION( SENTINEL )                                                                              \
 
 

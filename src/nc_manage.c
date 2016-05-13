@@ -54,6 +54,9 @@ static bool
 manage_arg2ormore(struct msg *r)
 {
 	switch (r->type) {
+    case MSG_REQ_PROXY_FIND_KEYS:
+	return true;
+        break;
     default:
         break;
 	}
@@ -141,10 +144,29 @@ manage_parse_req(struct msg *r)
                     }
 					
                     break;
+                    
+                case 8:
+
+					if (str8cmp(m, 'f', 'i', 'n', 'd', '_', 'k', 'e', 'y')) {
+                        r->type = MSG_REQ_PROXY_FIND_KEY;
+                        break;
+                    }
+					
+                    break;
+                    
+                case 9:
+
+					if (str9cmp(m, 'f', 'i', 'n', 'd', '_', 'k', 'e', 'y', 's')) {
+                        r->type = MSG_REQ_PROXY_FIND_KEYS;
+                        break;
+                    }
+					
+                    break;
                 }
 
                 switch (r->type) {
                 case MSG_REQ_PROXY_FIND_KEY:
+                case MSG_REQ_PROXY_FIND_KEYS:
                     if (ch == CR) {
                         goto error;
                     }
@@ -382,26 +404,236 @@ error:
                 r->state);
 }
 
+static rstatus_t
+manage_help_make_reply(struct context *ctx, struct msg *msg)
+{
+    rstatus_t status;
+    struct conn *conn;
+    char *contents;
+    char *line = "**********************************\x0d\x0a";
+
+    ASSERT(!msg->request);
+
+    conn = msg->owner;
+    ASSERT(conn->client && !conn->proxy);
+
+    status = msg_append_full(msg, (uint8_t *)line, strlen(line));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+    
+	contents = " COMMAND  : help\x0d\x0a DESCRIBE : display this message\x0d\x0a USAGE    : no args\x0d\x0a";
+	status = msg_append_full(msg, (uint8_t *)contents, strlen(contents));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+	status = msg_append_full(msg, (uint8_t *)line, strlen(line));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+
+    contents = " COMMAND  : status\x0d\x0a DESCRIBE : display the proxy status\x0d\x0a USAGE    : no args\x0d\x0a";
+	status = msg_append_full(msg, (uint8_t *)contents, strlen(contents));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+	status = msg_append_full(msg, (uint8_t *)line, strlen(line));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+
+    contents = " COMMAND  : find_key\x0d\x0a DESCRIBE : display a server which the key is belong to\x0d\x0a USAGE    : find_key poolname key\x0d\x0a";
+	status = msg_append_full(msg, (uint8_t *)contents, strlen(contents));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+	status = msg_append_full(msg, (uint8_t *)line, strlen(line));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+
+	contents = " COMMAND  : find_keys\x0d\x0a DESCRIBE : display servers which the keys are belong to\x0d\x0a USAGE    : find_key poolname key1 key2 ...\x0d\x0a";
+	status = msg_append_full(msg, (uint8_t *)contents, strlen(contents));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+	status = msg_append_full(msg, (uint8_t *)line, strlen(line));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+
+    return NC_OK;
+}
+
+static rstatus_t
+manage_findkey_make_reply(struct context *ctx, 
+	struct conn *conn, struct msg *msg, struct msg *pmsg)
+{
+	rstatus_t status;
+	uint32_t nkeys;
+	struct server_pool *sp;
+	struct server *server;
+	struct keypos *kp;
+    uint32_t idx;
+	char *contents;
+	
+	ASSERT(conn->client && !conn->proxy);
+    ASSERT(msg->request);
+	ASSERT(pmsg != NULL && !pmsg->request);
+    ASSERT(msg->owner == conn);
+	ASSERT(conn->owner == ctx->manager);
+
+	nkeys = array_n(msg->keys);
+	ASSERT(nkeys == 2);
+
+	kp = array_get(msg->keys, 0);
+	sp = server_pools_server_pool(&ctx->pool, kp->start, (uint32_t)(kp->end - kp->start));
+	if (sp == NULL) {
+        contents = "ERR: pool doesn't exist!\x0d\x0a";
+        status = msg_append_full(pmsg, (uint8_t *)contents, strlen(contents));
+        if (status != NC_OK) {
+            conn->err = ENOMEM;
+    		return status;
+        }
+		return NC_OK;
+	}
+
+	kp = array_get(msg->keys, 1);
+    idx = server_pool_idx(sp, kp->start, (uint32_t)(kp->end - kp->start));
+	server = array_get(&sp->server, idx);
+    
+	status = msg_append_full(pmsg, server->pname.data, server->pname.len);
+    if (status != NC_OK) {
+        conn->err = ENOMEM;
+        return status;
+    }
+
+	status = msg_append_full(pmsg, (uint8_t *)" ", 1);
+    if (status != NC_OK) {
+        conn->err = ENOMEM;
+		return status;
+    }
+
+	status = msg_append_full(pmsg, server->name.data, server->name.len);
+    if (status != NC_OK) {
+        conn->err = ENOMEM;
+		return status;
+    }
+
+	status = msg_append_full(pmsg, (uint8_t *)CRLF, CRLF_LEN);
+    if (status != NC_OK) {
+		conn->err = ENOMEM;
+        return status;
+    }
+
+	return NC_OK;
+}
+
+static rstatus_t
+manage_findkeys_make_reply(struct context *ctx, 
+	struct conn *conn, struct msg *msg, struct msg *pmsg)
+{
+	rstatus_t status;
+	uint32_t nkeys;
+	struct server_pool *sp;
+	struct server *server;
+	struct keypos *kp;
+    uint32_t i, idx;
+	char *contents;
+	
+	ASSERT(conn->client && !conn->proxy);
+    ASSERT(msg->request);
+	ASSERT(pmsg != NULL && !pmsg->request);
+    ASSERT(msg->owner == conn);
+	ASSERT(conn->owner == ctx->manager);
+
+	nkeys = array_n(msg->keys);
+	ASSERT(nkeys >= 2);
+
+	kp = array_get(msg->keys, 0);
+	sp = server_pools_server_pool(&ctx->pool, kp->start, (uint32_t)(kp->end - kp->start));
+	if (sp == NULL) {
+        contents = "ERR: pool doesn't exist!\x0d\x0a";
+        status = msg_append_full(pmsg, (uint8_t *)contents, strlen(contents));
+        if (status != NC_OK) {
+            conn->err = ENOMEM;
+    		return status;
+        }
+		return NC_OK;
+	}
+
+    for(i = 1; i < nkeys; i ++)
+	{
+    	kp = array_get(msg->keys, i);
+        idx = server_pool_idx(sp, kp->start, (uint32_t)(kp->end - kp->start));
+    	server = array_get(&sp->server, idx);
+        
+    	status = msg_append_full(pmsg, server->pname.data, server->pname.len);
+        if (status != NC_OK) {
+            conn->err = ENOMEM;
+            return status;
+        }
+
+    	status = msg_append_full(pmsg, (uint8_t *)" ", 1);
+        if (status != NC_OK) {
+            conn->err = ENOMEM;
+    		return status;
+        }
+
+    	status = msg_append_full(pmsg, server->name.data, server->name.len);
+        if (status != NC_OK) {
+            conn->err = ENOMEM;
+    		return status;
+        }
+
+    	status = msg_append_full(pmsg, (uint8_t *)CRLF, CRLF_LEN);
+        if (status != NC_OK) {
+    		conn->err = ENOMEM;
+            return status;
+        }
+    }
+    
+	return NC_OK;
+}
+
 rstatus_t
 manage_reply(struct context *ctx, struct msg *r)
 {
-    struct conn *c_conn;
-    struct msg *response = r->peer;
+    struct conn *conn;
+    struct msg *resp = r->peer;
 
-    ASSERT(response != NULL && response->owner != NULL);
+    ASSERT(resp != NULL && resp->owner != NULL);
     ASSERT(ctx->role == NC_CONTEXT_ROLE_MASTER);
 
-    c_conn = response->owner;
+    conn = resp->owner;
 
     switch (r->type) {
     case MSG_REQ_PROXY_STATUS:
         stats_aggregate(ctx);
         stats_make_rsp(ctx->stats);
-        return msg_append_full(response, ctx->stats->buf.data, ctx->stats->buf.len);
-
+        return msg_append_full(resp, ctx->stats->buf.data, ctx->stats->buf.len);
+        break;
+    case MSG_REQ_PROXY_HELP:
+        return manage_help_make_reply(ctx, resp);
+        break;
+    case MSG_REQ_PROXY_FIND_KEY:
+        return manage_findkey_make_reply(ctx, conn, r, resp);
+        break;
+    case MSG_REQ_PROXY_FIND_KEYS:
+        return manage_findkeys_make_reply(ctx, conn, r, resp);
+        break;
     default:
-        NOT_REACHED();
         return NC_ERROR;
+        break;
     }
 
     return NC_OK;
