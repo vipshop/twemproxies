@@ -45,7 +45,7 @@
 #define NC_MBUF_MIN_SIZE    MBUF_MIN_SIZE
 #define NC_MBUF_MAX_SIZE    MBUF_MAX_SIZE
 
-#define NC_THREAD_NUM_DEFAULT	sysconf(_SC_NPROCESSORS_ONLN)
+#define NC_THREAD_NUM_DEFAULT	(sysconf(_SC_NPROCESSORS_ONLN)>6?6:sysconf(_SC_NPROCESSORS_ONLN))
 
 static int show_help;
 static int show_version;
