@@ -1,20 +1,8 @@
-# twemproxies (nutcrackers) [![Build Status](https://secure.travis-ci.org/twitter/twemproxies.png)](http://travis-ci.org/twitter/twemproxies)
+# twemproxies (nutcrackers)
 
 **twemproxies** (pronounced "two-em-proxy"), aka **nutcrackers** is a multithread, fast and lightweight proxy for [memcached](http://www.memcached.org/) and [redis](http://redis.io/) protocol. It was built primarily to reduce the number of connections to the caching servers on the backend. This, together with protocol pipelining and sharding enables you to horizontally scale your distributed caching architecture.
 
 ## Build
-
-To build twemproxies from [distribution tarball](https://drive.google.com/open?id=0B6pVMMV5F5dfMUdJV25abllhUWM&authuser=0):
-
-    $ ./configure
-    $ make
-    $ sudo make install
-
-To build twemproxies from [distribution tarball](https://drive.google.com/open?id=0B6pVMMV5F5dfMUdJV25abllhUWM&authuser=0) in _debug mode_:
-
-    $ CFLAGS="-ggdb3 -O0" ./configure --enable-debug=full
-    $ make
-    $ sudo make install
 
 To build twemproxies from source with _debug logs enabled_ and _assertions enabled_:
 
@@ -37,6 +25,41 @@ A quick checklist:
 Try the follow command to get the twemproxies status:
 	
     printf "status\r\n" | nc manage_ip manage_port
+    
+## Performance
+
+We test twemproxis performance on our online physical machine.
+
+#### Machine Configuration:
+OS: centos6 x86_64
+Cpu: 24 core
+Network: 10000Mbps
+Memory: 128G
+
+#### Test Results:
+
+| twemproxies thread number | redis-benchmark number | client connections | qps(k/s) | cpu(%) |
+| -------------------------:| ----------------------:| ------------------:| --------:| ------:|
+| 1                         | 1                      | 8                  |       45 |     90 |
+| 2                         | 2                      | 16                 |       84 |    187 |
+| 3                         | 3                      | 24                 |      121 |    285 |
+| 4                         | 4                      | 32                 |      150 |    385 |
+| 5                         | 5                      | 40                 |      186 |    478 |
+| 6                         | 6                      | 48                 |      210 |    583 |
+| 7                         | 7                      | 56                 |      235 |    681 |
+| 8                         | 8                      | 64                 |      264 |    780 |
+| 9                         | 9                      | 72                 |      289 |    878 |
+| 10                        | 10                     | 80                 |      313 |    976 |
+| 11                        | 11                     | 88                 |      336 |   1074 |
+| 12                        | 12                     | 96                 |      354 |   1175 |
+| 13                        | 13                     | 104                |      366 |   1280 |
+| 14                        | 14                     | 112                |      386 |   1380 |
+| 15                        | 15                     | 120                |      405 |   1480 |
+| 16                        | 16                     | 128                |      422 |   1580 |
+| 17                        | 17                     | 136                |      442 |   1681 |
+| 18                        | 18                     | 144                |      460 |   1779 |
+| 19                        | 19                     | 152                |      474 |   1880 |
+| 20                        | 20                     | 160                |      490 |   1973 |
 
 ## Features
 
