@@ -30,13 +30,27 @@ Try the follow command to get the twemproxies status:
 
 We test twemproxis performance on our online physical machine.
 
-#### Machine Configuration:
+##### Machine Configuration:
+
 OS: centos6 x86_64
+
 Cpu: 24 core
+
 Network: 10000Mbps
+
 Memory: 128G
 
-#### Test Results:
+##### Test Example:
+
+Command: set
+
+Key: one million random keys (used redis-benchmark -r option)
+
+Key length: 16
+
+Value length: 3
+
+##### Test Results:
 
 | twemproxies thread number | redis-benchmark number | client connections | qps(k/s) | cpu(%) |
 | -------------------------:| ----------------------:| ------------------:| --------:| ------:|
