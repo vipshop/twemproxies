@@ -53,6 +53,9 @@ def test_slow_req():
     assert_fail('timed out', pipe.execute)
 
 def test_signal():
+    if nc.version() > '0.0.1':
+        return
+    
     #init
     nc.cleanlog()
     nc.signal('HUP')

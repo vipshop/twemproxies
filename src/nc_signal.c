@@ -90,18 +90,18 @@ signal_handler(int signo)
         break;
 
     case SIGTTIN:
-        actionstr = ", up logging level";
-        action = log_level_up;
+        //actionstr = ", up logging level";
+        //action = log_level_up;
         break;
 
     case SIGTTOU:
-        actionstr = ", down logging level";
-        action = log_level_down;
+        //actionstr = ", down logging level";
+        //action = log_level_down;
         break;
 
     case SIGHUP:
-        actionstr = ", reopening log file";
-        action = log_reopen;
+        //actionstr = ", reopening log file";
+        //action = log_reopen;
         break;
 
     case SIGINT:

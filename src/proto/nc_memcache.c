@@ -588,6 +588,14 @@ memcache_parse_req(struct msg *r)
             case ' ':
                 break;
 
+            /* Support "delete key 0" */
+            case '0':
+				if(!memcache_delete(r)) {
+                    goto error;
+                }
+                
+                break;
+                
             case 'n':
                 if (memcache_storage(r) || memcache_arithmetic(r) || memcache_delete(r) || memcache_touch(r)) {
                     /* noreply_start <- p */
