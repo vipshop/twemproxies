@@ -1,6 +1,8 @@
 # twemproxies (nutcrackers)
 
-**twemproxies** (pronounced "two-em-proxy"), aka **nutcrackers** is a multithread, fast and lightweight proxy for [memcached](http://www.memcached.org/) and [redis](http://redis.io/) protocol. It was built primarily to reduce the number of connections to the caching servers on the backend. This, together with protocol pipelining and sharding enables you to horizontally scale your distributed caching architecture.
+**twemproxies** ( **nutcrackers** ) is a multithread, fast and lightweight proxy for [memcached](http://www.memcached.org/) and [redis](http://redis.io/) protocol. It was built primarily to reduce the number of connections to the caching servers on the backend. This, together with protocol pipelining and sharding enables you to horizontally scale your distributed caching architecture.
+
+### QQ群：129951966
 
 ## Build
 
@@ -32,9 +34,15 @@ We test twemproxis performance on our online physical machine.
 
 ##### Machine Configuration:
 
-OS: centos6 x86_64
+OS: Centos6 Linux 2.6.32-504.23.4.el6.x86_64
 
-Cpu: 24 core
+Cpu Model Name: Intel(R) Xeon(R) CPU E5-2630 v2 @ 2.60GHz
+
+Cpu Physical: 2
+
+Cpu Cores: 6
+
+Cpu Processors: 24
 
 Network: 10000Mbps
 
