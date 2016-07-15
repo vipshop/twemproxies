@@ -1,3 +1,9 @@
+ 2016-7-15  deep  <diguo58@gmail.com>
+    * twemproxies: version 1.2.0 release
+      support 'delete key 0' for mc
+      change default thread number
+      add help, find_key and find_keys command for manage
+      
  2016-5-10  deep  <diguo58@gmail.com>
     * twemproxies: version 1.1.0 release
       add show_twemproxies_stats tool
