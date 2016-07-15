@@ -590,7 +590,7 @@ memcache_parse_req(struct msg *r)
 
             /* Support "delete key 0" */
             case '0':
-				if(!memcache_delete(r)) {
+                if(!memcache_delete(r)) {
                     goto error;
                 }
                 
