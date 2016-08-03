@@ -2327,6 +2327,8 @@ redis_copy_bulk(struct msg *dst, struct msg *src)
             mbuf_remove(&src->mhdr, mbuf);
             if (dst != NULL) {
                 mbuf_insert(&dst->mhdr, mbuf);
+            } else {
+                mbuf_put(mbuf);
             }
             len -= mbuf_length(mbuf);
             mbuf = nbuf;
