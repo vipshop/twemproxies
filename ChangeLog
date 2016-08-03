@@ -1,3 +1,7 @@
+ 2016-8-3  deep  <diguo58@gmail.com>
+    * twemproxies: version 1.2.1 release
+      fix a bug about memory leak for mset command
+
  2016-7-15  deep  <diguo58@gmail.com>
     * twemproxies: version 1.2.0 release
       support 'delete key 0' for mc
