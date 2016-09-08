@@ -655,6 +655,8 @@ req_recv_done(struct context *ctx, struct conn *conn, struct msg *msg,
         return;
     }
 
+    msg->start_ts = nc_usec_now();
+
     /* do fragment */
     pool = conn->owner;
     TAILQ_INIT(&frag_msgq);

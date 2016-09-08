@@ -49,6 +49,18 @@ manage_arg2or3(struct msg *r)
 	return false;
 }
 
+static bool
+manage_arg1ormore(struct msg *r)
+{
+	switch (r->type) {
+    case MSG_REQ_PROXY_SLOWLOG:
+	return true;
+        break;
+    default:
+        break;
+	}
+	return false;
+}
 
 static bool
 manage_arg2ormore(struct msg *r)
@@ -144,6 +156,15 @@ manage_parse_req(struct msg *r)
                     }
 					
                     break;
+
+               case 7:
+
+					if (str7cmp(m, 's', 'l', 'o', 'w', 'l', 'o', 'g')) {
+                        r->type = MSG_REQ_PROXY_SLOWLOG;
+                        break;
+                    }
+					
+                    break;
                     
                 case 8:
 
@@ -162,11 +183,13 @@ manage_parse_req(struct msg *r)
                     }
 					
                     break;
+
                 }
 
                 switch (r->type) {
                 case MSG_REQ_PROXY_FIND_KEY:
                 case MSG_REQ_PROXY_FIND_KEYS:
+                case MSG_REQ_PROXY_SLOWLOG:
                     if (ch == CR) {
                         goto error;
                     }
@@ -247,8 +270,7 @@ manage_parse_req(struct msg *r)
 					} else {
 						goto error;
 					}
-                } 
-				else if (manage_arg2or3(r)) {
+                } else if (manage_arg2or3(r)) {
                 	ASSERT(array_n(r->keys) > 0);
                 	if (array_n(r->keys) == 1) {
                 		if(ch == CR) {
@@ -267,7 +289,15 @@ manage_parse_req(struct msg *r)
 					} else {
 						goto error;
 					}
-                }else if (manage_arg2ormore(r)) {
+                } else if (manage_arg1ormore(r)) {
+					ASSERT(array_n(r->keys) > 0);
+                    
+                	if(ch == CR) {
+						state = SW_CRLF;
+					} else {
+						state = SW_SPACES_BEFORE_KEYS;
+					}
+                } else if (manage_arg2ormore(r)) {
 
 					ASSERT(array_n(r->keys) > 0);
                 	if (array_n(r->keys) == 1) {
@@ -291,7 +321,7 @@ manage_parse_req(struct msg *r)
             break;
 
         case SW_SPACES_BEFORE_KEYS:
-            ASSERT(manage_arg2ormore(r) || manage_arg2or3(r));
+            ASSERT(manage_arg1ormore(r) || manage_arg2ormore(r) || manage_arg2or3(r));
             switch (ch) {
             case ' ':
                 break;
@@ -471,6 +501,18 @@ manage_help_make_reply(struct context *ctx, struct msg *msg)
 		return status;
     }
 
+    contents = " COMMAND  : slowlog\x0d\x0a DESCRIBE : display and control the slowlog\x0d\x0a USAGE    : slowlog <subcommand(get|len|reset)> [argument]\x0d\x0a";
+	status = msg_append_full(msg, (uint8_t *)contents, strlen(contents));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+	status = msg_append_full(msg, (uint8_t *)line, strlen(line));
+	if (status != NC_OK) {
+		conn->err = ENOMEM;
+		return status;
+    }
+
     return NC_OK;
 }
 
@@ -630,6 +672,9 @@ manage_reply(struct context *ctx, struct msg *r)
         break;
     case MSG_REQ_PROXY_FIND_KEYS:
         return manage_findkeys_make_reply(ctx, conn, r, resp);
+        break;
+    case MSG_REQ_PROXY_SLOWLOG:
+        return slowlog_command_make_reply(ctx, conn, r, resp);
         break;
     default:
         return NC_ERROR;

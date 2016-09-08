@@ -47,6 +47,8 @@
 
 #define NC_THREAD_NUM_DEFAULT	(sysconf(_SC_NPROCESSORS_ONLN)>6?6:sysconf(_SC_NPROCESSORS_ONLN))
 
+#define NC_SLOWLOG_LOG_SLOWER_THAN_DEFAULT -1
+
 static int show_help;
 static int show_version;
 static int test_conf;
@@ -68,10 +70,11 @@ static struct option long_options[] = {
     { "pid-file",       required_argument,  NULL,   'p' },
     { "mbuf-size",      required_argument,  NULL,   'm' },
     { "thread-num",     required_argument,  NULL,   'T' },
+    { "slower-than",    required_argument,  NULL,   'S' },
     { NULL,             0,                  NULL,    0  }
 };
 
-static char short_options[] = "hVtdDv:o:c:s:i:a:p:m:T:";
+static char short_options[] = "hVtdDv:o:c:s:i:a:p:m:T:S:";
 
 static rstatus_t
 nc_daemonize(int dump_core)
@@ -208,7 +211,7 @@ nc_show_usage(void)
         "Usage: nutcrackers [-?hVdDt] [-v verbosity level] [-o output file]" CRLF
         "                   [-c conf file] [-s manage port] [-a manage addr]" CRLF
         "                   [-i interval] [-p pid file] [-m mbuf size]" CRLF
-        "                   [-T worker threads number]" CRLF
+        "                   [-T worker threads number] [-S slowlog limit time]" CRLF
         "");
     log_stderr(
         "Options:" CRLF
@@ -226,7 +229,8 @@ nc_show_usage(void)
         "  -i, --interval=N       : set interval in msec (default: %d msec)" CRLF
         "  -p, --pid-file=S       : set pid file (default: %s)" CRLF
         "  -m, --mbuf-size=N      : set size of mbuf chunk in bytes (default: %d bytes)" CRLF
-        "  -T, --thread_num=N     : set the worker threads number (default: %d)" CRLF
+        "  -T, --thread-num=N     : set the worker threads number (default: %d)" CRLF
+        "  -S, --slower-than=N    : set the time in microseconds to exceed for slowlog(default: %d)" CRLF
         "",
         NC_LOG_DEFAULT, NC_LOG_MIN, NC_LOG_MAX,
         NC_LOG_PATH != NULL ? NC_LOG_PATH : "stderr",
@@ -234,7 +238,8 @@ nc_show_usage(void)
         NC_PORT, NC_ADDR, NC_INTERVAL,
         NC_PID_FILE != NULL ? NC_PID_FILE : "off",
         NC_MBUF_SIZE,
-        NC_THREAD_NUM_DEFAULT);
+        NC_THREAD_NUM_DEFAULT,
+        NC_SLOWLOG_LOG_SLOWER_THAN_DEFAULT);
 }
 
 static rstatus_t
@@ -308,6 +313,7 @@ nc_set_default_options(struct instance *nci)
     nci->pidfile = 0;
 
     nci->thread_num = (int)NC_THREAD_NUM_DEFAULT;
+    nci->slowlog_log_slower_than = NC_SLOWLOG_LOG_SLOWER_THAN_DEFAULT;
 }
 
 static rstatus_t
@@ -423,6 +429,16 @@ nc_get_options(int argc, char **argv, struct instance *nci)
             nci->thread_num = value;
             break;
 
+        case 'S':
+            value = nc_atoi(optarg, strlen(optarg));
+            if (value < 0) {
+                log_stderr("nutcrackers: option -S requires a number");
+                return NC_ERROR;
+            }
+
+            nci->slowlog_log_slower_than = value;
+            break;
+
         case '?':
             switch (optopt) {
             case 'o':
@@ -437,6 +453,7 @@ nc_get_options(int argc, char **argv, struct instance *nci)
             case 's':
             case 'i':
             case 'T':
+            case 'S':
                 log_stderr("nutcrackers: option -%c requires a number", optopt);
                 break;
 
@@ -522,6 +539,8 @@ nc_pre_run(struct instance *nci)
     }
 
     STATS_LOCK_INIT();
+
+    slowlog_init(nci->slowlog_log_slower_than,SLOWLOG_MAX_LEN);
 
     nc_print_run(nci);
 

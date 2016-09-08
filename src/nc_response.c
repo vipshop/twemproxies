@@ -362,7 +362,11 @@ rsp_send_done(struct context *ctx, struct conn *conn, struct msg *msg)
     log_debug(LOG_VVERB, "send done rsp %"PRIu64" on c %d", msg->id, conn->sd);
 
     pmsg = msg->peer;
-
+    
+    if (pmsg->start_ts > 0) {
+        slowlog_push_entry_if_needed(pmsg,(long long)(nc_usec_now()-pmsg->start_ts));
+    }
+    
     ASSERT(!msg->request && pmsg->request);
     ASSERT(pmsg->peer == msg);
     ASSERT(pmsg->done && !pmsg->swallow);

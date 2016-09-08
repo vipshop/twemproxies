@@ -326,10 +326,6 @@ msg_get(struct conn *conn, bool request, unsigned source_type, struct msg_base *
         NOT_REACHED();
     }
 
-    if (log_loggable(LOG_NOTICE) != 0) {
-        msg->start_ts = nc_usec_now();
-    }
-
     log_debug(LOG_VVERB, "get msg %p id %"PRIu64" request %d owner sd %d",
               msg, msg->id, msg->request, conn->sd);
 

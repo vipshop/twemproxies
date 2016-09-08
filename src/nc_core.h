@@ -95,6 +95,7 @@ struct event_base;
 #include <inttypes.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
@@ -123,6 +124,7 @@ struct event_base;
 #include <nc_server.h>
 #include <nc_manage.h>
 #include <nc_thread.h>
+#include <nc_slowlog.h>
 
 #define NC_CONTEXT_ROLE_NULL    0
 #define NC_CONTEXT_ROLE_MASTER  1
@@ -173,6 +175,7 @@ struct instance {
     char            *pid_filename;               /* pid filename */
     unsigned        pidfile:1;                   /* pid file created? */
     int             thread_num;                  /* the thread number */
+    int             slowlog_log_slower_than;     /* the slowlog limit time */
 };
 
 struct context *core_ctx_create(struct instance *nci, int role);

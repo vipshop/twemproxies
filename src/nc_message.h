@@ -140,7 +140,7 @@ typedef enum msg_parse_result {
     ACTION( REQ_REDIS_SUNION )                                                                      \
     ACTION( REQ_REDIS_SUNIONSTORE )                                                                 \
     ACTION( REQ_REDIS_SSCAN)                                                                        \
-    ACTION( REQ_REDIS_ZADD )                   /* redis requests - sorted sets */                   \
+    ACTION( REQ_REDIS_ZADD )                   /* redis requests - sorted sets */                        \
     ACTION( REQ_REDIS_ZCARD )                                                                       \
     ACTION( REQ_REDIS_ZCOUNT )                                                                      \
     ACTION( REQ_REDIS_ZINCRBY )                                                                     \
@@ -160,13 +160,13 @@ typedef enum msg_parse_result {
     ACTION( REQ_REDIS_ZSCORE )                                                                      \
     ACTION( REQ_REDIS_ZUNIONSTORE )                                                                 \
     ACTION( REQ_REDIS_ZSCAN)                                                                        \
-    ACTION( REQ_REDIS_EVAL )                   /* redis requests - eval */                          \
+    ACTION( REQ_REDIS_EVAL )                   /* redis requests - eval */                              \
     ACTION( REQ_REDIS_EVALSHA )                                                                     \
-    ACTION( REQ_REDIS_PING )                   /* redis requests - ping/quit */                     \
+    ACTION( REQ_REDIS_PING )                   /* redis requests - ping/quit */                         \
     ACTION( REQ_REDIS_QUIT)                                                                         \
     ACTION( REQ_REDIS_AUTH)                                                                         \
-    ACTION( REQ_REDIS_SELECT)                  /* only during init */                               \
-    ACTION( RSP_REDIS_STATUS )                 /* redis response */                                 \
+    ACTION( REQ_REDIS_SELECT)                  /* only during init */                                   \
+    ACTION( RSP_REDIS_STATUS )                 /* redis response */                                   \
     ACTION( RSP_REDIS_ERROR )                                                                       \
     ACTION( RSP_REDIS_ERROR_ERR )                                                                   \
     ACTION( RSP_REDIS_ERROR_OOM )                                                                   \
@@ -189,6 +189,7 @@ typedef enum msg_parse_result {
     ACTION( REQ_PROXY_STATUS )                                                                      \
     ACTION( REQ_PROXY_FIND_KEY )                                                                    \
     ACTION( REQ_PROXY_FIND_KEYS )                                                                   \
+    ACTION( REQ_PROXY_SLOWLOG )                                                                     \
     ACTION( SENTINEL )                                                                              \
 
 
