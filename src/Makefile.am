@@ -53,7 +53,7 @@ nutcrackers_SOURCES =			\
 	nc_stats.c nc_stats.h		\
 	nc_thread.c nc_thread.h		\
 	nc_manage.c nc_manage.h		\
-    nc_slowlog.c nc_slowlog.h           \
+    nc_slowlog.c nc_slowlog.h       \
 	nc_queue.h			\
 	nc.c
 

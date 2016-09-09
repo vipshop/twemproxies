@@ -175,7 +175,6 @@ struct instance {
     char            *pid_filename;               /* pid filename */
     unsigned        pidfile:1;                   /* pid file created? */
     int             thread_num;                  /* the thread number */
-    int             slowlog_log_slower_than;     /* the slowlog limit time */
 };
 
 struct context *core_ctx_create(struct instance *nci, int role);

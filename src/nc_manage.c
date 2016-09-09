@@ -501,7 +501,7 @@ manage_help_make_reply(struct context *ctx, struct msg *msg)
 		return status;
     }
 
-    contents = " COMMAND  : slowlog\x0d\x0a DESCRIBE : display and control the slowlog\x0d\x0a USAGE    : slowlog <subcommand(get|len|reset)> [argument]\x0d\x0a";
+    contents = " COMMAND  : slowlog\x0d\x0a DESCRIBE : display and control the slowlog\x0d\x0a USAGE    : slowlog <subcommand(get|id|len|overview|reset)> [argument]\x0d\x0a";
 	status = msg_append_full(msg, (uint8_t *)contents, strlen(contents));
 	if (status != NC_OK) {
 		conn->err = ENOMEM;

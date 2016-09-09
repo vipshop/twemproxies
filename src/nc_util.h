@@ -76,7 +76,7 @@
     gethostname((char *)_name, (size_t)_len)
 
 #define nc_atoi(_line, _n)          \
-    _nc_atoi((uint8_t *)_line, (size_t)_n)
+    _nc_atoi((uint8_t *)_line, (size_t)(_n))
 
 int nc_set_blocking(int sd);
 int nc_set_nonblocking(int sd);

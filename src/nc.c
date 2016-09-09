@@ -70,7 +70,7 @@ static struct option long_options[] = {
     { "pid-file",       required_argument,  NULL,   'p' },
     { "mbuf-size",      required_argument,  NULL,   'm' },
     { "thread-num",     required_argument,  NULL,   'T' },
-    { "slower-than",    required_argument,  NULL,   'S' },
+    { "slowlog",        required_argument,  NULL,   'S' },
     { NULL,             0,                  NULL,    0  }
 };
 
@@ -211,7 +211,7 @@ nc_show_usage(void)
         "Usage: nutcrackers [-?hVdDt] [-v verbosity level] [-o output file]" CRLF
         "                   [-c conf file] [-s manage port] [-a manage addr]" CRLF
         "                   [-i interval] [-p pid file] [-m mbuf size]" CRLF
-        "                   [-T worker threads number] [-S slowlog limit time]" CRLF
+        "                   [-T worker threads number] [-S slowlog config]" CRLF
         "");
     log_stderr(
         "Options:" CRLF
@@ -230,7 +230,7 @@ nc_show_usage(void)
         "  -p, --pid-file=S       : set pid file (default: %s)" CRLF
         "  -m, --mbuf-size=N      : set size of mbuf chunk in bytes (default: %d bytes)" CRLF
         "  -T, --thread-num=N     : set the worker threads number (default: %d)" CRLF
-        "  -S, --slower-than=N    : set the time in microseconds to exceed for slowlog(default: %d)" CRLF
+        "  -S, --slowlog=S        : setup the slowlog (default is disabled)" CRLF
         "",
         NC_LOG_DEFAULT, NC_LOG_MIN, NC_LOG_MAX,
         NC_LOG_PATH != NULL ? NC_LOG_PATH : "stderr",
@@ -238,8 +238,7 @@ nc_show_usage(void)
         NC_PORT, NC_ADDR, NC_INTERVAL,
         NC_PID_FILE != NULL ? NC_PID_FILE : "off",
         NC_MBUF_SIZE,
-        NC_THREAD_NUM_DEFAULT,
-        NC_SLOWLOG_LOG_SLOWER_THAN_DEFAULT);
+        NC_THREAD_NUM_DEFAULT);
 }
 
 static rstatus_t
@@ -313,7 +312,6 @@ nc_set_default_options(struct instance *nci)
     nci->pidfile = 0;
 
     nci->thread_num = (int)NC_THREAD_NUM_DEFAULT;
-    nci->slowlog_log_slower_than = NC_SLOWLOG_LOG_SLOWER_THAN_DEFAULT;
 }
 
 static rstatus_t
@@ -430,13 +428,11 @@ nc_get_options(int argc, char **argv, struct instance *nci)
             break;
 
         case 'S':
-            value = nc_atoi(optarg, strlen(optarg));
-            if (value < 0) {
-                log_stderr("nutcrackers: option -S requires a number");
+            if (slowlog_parse_option(optarg) != NC_OK) {
+                log_stderr("nutcrackers: option -S requires a string like 10000,24,30");
                 return NC_ERROR;
             }
 
-            nci->slowlog_log_slower_than = value;
             break;
 
         case '?':
@@ -540,7 +536,7 @@ nc_pre_run(struct instance *nci)
 
     STATS_LOCK_INIT();
 
-    slowlog_init(nci->slowlog_log_slower_than,SLOWLOG_MAX_LEN);
+    slowlog_init();
 
     nc_print_run(nci);
 
