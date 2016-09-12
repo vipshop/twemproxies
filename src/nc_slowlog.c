@@ -131,14 +131,12 @@ static void slowlog_statistics_oneday_reset(struct statistics_oneday *so)
     if (so == NULL || statistics_period == 0)
         return;
 
-    pthread_mutex_lock(&statistics_locker);
     so->year = 0;
     so->mon = 0;
     so->day = 0;
     for (j = 0; j < statistics_period; j ++) {
         so->periods[j] = 0;
     }
-    pthread_mutex_unlock(&statistics_locker);
 }
 
 static void slowlog_statistics_input(void)
@@ -435,7 +433,7 @@ slowlog_command_make_reply(struct context *ctx,
         }
         return NC_OK;
     } else if (subcmdlen==strlen("overview") &&
-        !memcmp(kp->start,"overview",subcmdlen)){
+        !memcmp(kp->start,"overview",subcmdlen)) {
         int count, buf_len;
         uint8_t buf[50];
         int j, idx, id;
@@ -500,9 +498,6 @@ slowlog_command_make_reply(struct context *ctx,
             
             if (--idx < 0) {
                 idx = statistics_days - 1;
-                if (slowlog_statistics[idx].year == 0) {
-                    break;
-                }
             }
         }
         pthread_mutex_unlock(&statistics_locker);
