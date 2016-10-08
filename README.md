@@ -288,6 +288,6 @@ If you are deploying twemproxies in production, you might consider reading throu
 
 ## License
 
-Copyright 2016 DEEP, Inc.
+Copyright © 2016 VIPSHOP Inc.
 
 Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
