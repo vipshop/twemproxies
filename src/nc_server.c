@@ -466,6 +466,7 @@ rstatus_t
 server_connect(struct context *ctx, struct server *server, struct conn *conn)
 {
     rstatus_t status;
+    struct server_pool *sp = server->owner;
 
     ASSERT(!conn->client && !conn->proxy);
 
@@ -522,8 +523,18 @@ server_connect(struct context *ctx, struct server *server, struct conn *conn)
     if (status != NC_OK) {
         if (errno == EINPROGRESS) {
             conn->connecting = 1;
-            log_debug(LOG_DEBUG, "connecting on s %d to server '%.*s'",
+            log_debug(LOG_INFO, "connecting on s %d to server '%.*s'",
                       conn->sd, server->pname.len, server->pname.data);
+
+            if (sp->tcpkeepalive) {
+		        status = nc_set_tcpkeepalive(conn->sd, sp->tcpkeepidle, 
+			        sp->tcpkeepintvl, sp->tcpkeepcnt);
+        		if (status != NC_OK) {
+        			log_warn("set tcpkeepalive on s %d from pool %.*s failed, ignored: %s",
+        			    conn->sd, sp->name.len, sp->name.data, strerror(errno));
+        		}
+        	}
+            
             return NC_OK;
         }
 
@@ -537,6 +548,15 @@ server_connect(struct context *ctx, struct server *server, struct conn *conn)
     conn->connected = 1;
     log_debug(LOG_INFO, "connected on s %d to server '%.*s'", conn->sd,
               server->pname.len, server->pname.data);
+
+    if (sp->tcpkeepalive) {
+		status = nc_set_tcpkeepalive(conn->sd, sp->tcpkeepidle, 
+			sp->tcpkeepintvl, sp->tcpkeepcnt);
+		if (status != NC_OK) {
+			log_warn("set tcpkeepalive on s %d from pool %.*s failed, ignored: %s",
+			    conn->sd, sp->name.len, sp->name.data, strerror(errno));
+		}
+	}
 
     return NC_OK;
 
