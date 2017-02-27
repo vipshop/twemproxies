@@ -156,9 +156,9 @@ twemproxies can be configured through a YAML file specified by the -c or --conf-
 + **timeout**: The timeout value in msec that we wait for to establish a connection to the server or receive a response from a server. By default, we wait indefinitely.
 + **backlog**: The TCP backlog argument. Defaults to 512.
 + **tcpkeepalive**: A boolean value that controls if tcp keepalive enabled. Defaults to false.
-+ **tcpkeepidle**: The time value in msec that a connection is in idle, and then twemproxy check this connection whether dead or not. 
-+ **tcpkeepcnt**: The number of tcpkeepalive attempt check if one idle connection dead times when the client always had no reply. 
-+ **tcpkeepintvl**: The time value in msec that the interval between every tcpkeepalive check when the client always had no reply.
++ **tcpkeepidle**: The time value in sec that a connection is in idle, and then twemproxy check this connection whether dead or not. Max value is 32767.
++ **tcpkeepcnt**: The number of tcpkeepalive attempt check if one idle connection dead times when the client always had no reply. Max value is 127.
++ **tcpkeepintvl**: The time value in sec that the interval between every tcpkeepalive check when the client always had no reply. Max value is 32767.
 + **preconnect**: A boolean value that controls if twemproxies should preconnect to all the servers in this pool on process start. Defaults to false.
 + **redis**: A boolean value that controls if a server pool speaks redis or memcached protocol. Defaults to false.
 + **redis_auth**: Authenticate to the Redis server on connect.
